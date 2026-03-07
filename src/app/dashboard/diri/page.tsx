@@ -12,7 +12,7 @@ import { signOut } from "firebase/auth";
 
 export default function DiriDashboard() {
     const { user, profile, loading: authLoading } = useAuth();
-    const [events, setEvents] = useState<{ id: string; date: string | number }[]>([]);
+    const [events, setEvents] = useState<{ id: string; date: string | number; type?: string }[]>([]);
     const [latestEventId, setLatestEventId] = useState<string | null>(null);
     const [attendanceDict, setAttendanceDict] = useState<Record<string, { attended: boolean, late: boolean }>>({});
     const [totalEvents, setTotalEvents] = useState(0);
@@ -26,7 +26,7 @@ export default function DiriDashboard() {
         // Listen to total events
         const qEvents = query(collection(db, "events"), orderBy("date", "desc"));
         const unsubEvents = onSnapshot(qEvents, (snap) => {
-            const evts = snap.docs.map(d => ({ id: d.id, ...(d.data() as { date: string | number }) }));
+            const evts = snap.docs.map(d => ({ id: d.id, ...(d.data() as { date: string | number; type?: string }) }));
             setEvents(evts);
             setTotalEvents(snap.size); // The denominator
 
@@ -93,7 +93,7 @@ export default function DiriDashboard() {
             <div className="flex justify-between items-center mb-8 relative z-10 p-2">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Hola, {profile?.displayName?.split(" ")[0] || "Diri"} 👋</h1>
-                    <p className="text-brand-gris text-sm mt-1">Cades Escáner Invertido</p>
+                    <p className="text-brand-gris text-sm mt-1">Pase de lista Cadés</p>
                 </div>
                 <button onClick={handleLogout} className="p-2 bg-[#111] border border-stone-800 hover:bg-[#222] rounded-full transition-colors active:scale-95 text-brand-gris">
                     <LogOut className="w-5 h-5" />
@@ -186,12 +186,12 @@ export default function DiriDashboard() {
                 >
                     <div className="flex items-center gap-3 mb-6">
                         <History className="w-5 h-5 text-brand-naranja" />
-                        <h2 className="font-medium text-sm">Historial de Asambleas</h2>
+                        <h2 className="font-medium text-sm">Historial de Asistencias</h2>
                     </div>
 
                     <div className="space-y-4">
                         {events.length === 0 ? (
-                            <p className="text-brand-gris text-sm italic text-center py-4">Aún no hay asambleas registradas.</p>
+                            <p className="text-brand-gris text-sm italic text-center py-4">Aún no hay asambleas o juntas registradas.</p>
                         ) : (
                             events.map(event => {
                                 const record = attendanceDict[event.id];
@@ -202,7 +202,7 @@ export default function DiriDashboard() {
                                     <div key={event.id} className="flex justify-between items-center p-3 rounded-2xl bg-stone-900 border border-stone-800">
                                         <div>
                                             <p className="text-sm font-medium text-brand-blanco capitalize">
-                                                {dateObj.toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })}
+                                                {event.type || 'asamblea'} del {dateObj.toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })}
                                             </p>
                                         </div>
                                         <div>

@@ -132,7 +132,7 @@ export default function CoordiDashboard() {
             <div className="flex justify-between items-center mb-10 relative z-10 max-w-4xl mx-auto">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-brand-rojo to-brand-naranja">
-                        Panel Administrativo
+                        Panel de {profile?.role === 'coordi' ? 'Coordi' : 'Asesor'}
                     </h1>
                     <p className="text-brand-gris mt-1 flex items-center gap-2">
                         Sesiones totales: <span className="text-brand-naranja font-mono font-bold bg-[#111] px-2 py-0.5 rounded">{totalEvents}</span>

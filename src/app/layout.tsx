@@ -15,7 +15,7 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   title: "Asistencia Diris",
-  description: "Sistema de Control de Asistencia con Escaneo Invertido",
+  description: "Pase de lista Cadés",
 };
 
 export default function RootLayout({

@@ -165,7 +165,7 @@ export default function Home() {
           </div>
 
           <h1 className="text-3xl font-bold text-center mb-2 tracking-tight">Cades Checker</h1>
-          <p className="text-brand-gris text-center mb-8">Sistema de asistencia invertido</p>
+          <p className="text-brand-gris text-center mb-8">Pase de lista Cadés</p>
 
           <div className="space-y-4">
             <div className="flex bg-[#222]/50 p-1 rounded-xl mb-6">
