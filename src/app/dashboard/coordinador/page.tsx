@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Plus, CalendarPlus, QrCode, LogOut, CheckCircle2 } from "lucide-react";
-import { collection, query, onSnapshot, addDoc, doc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { collection, query, onSnapshot, addDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, CheckCircle, Loader2, XCircle } from "lucide-react";
 import { collection, query, orderBy, limit, onSnapshot, getDocs, addDoc, where } from "firebase/firestore";
-import { db, auth } from "@/lib/firebase/config";
+import { db } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
 import { Scanner } from '@yudiel/react-qr-scanner';
 
@@ -13,7 +13,7 @@ export default function ScannerPage() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const [currentEventId, setCurrentEventId] = useState<string | null>(null);
-    const [scannedUserId, setScannedUserId] = useState<string | null>(null);
+
     const [feedback, setFeedback] = useState<"success" | "duplicate" | "error" | null>(null);
     const [processing, setProcessing] = useState(false);
 
@@ -39,7 +39,7 @@ export default function ScannerPage() {
         if (!scannedText) return;
 
         setProcessing(true);
-        setScannedUserId(scannedText);
+
 
         try {
             // 1. Verify user exists
@@ -81,7 +81,7 @@ export default function ScannerPage() {
                 try {
                     // Attempting native beep if supported or just visual
                     navigator.vibrate?.([100, 50, 100]);
-                } catch (e) { }
+                } catch { }
             }
 
             setFeedback("success");
@@ -96,7 +96,6 @@ export default function ScannerPage() {
 
     const resetScanner = () => {
         setFeedback(null);
-        setScannedUserId(null);
         setProcessing(false);
     };
 

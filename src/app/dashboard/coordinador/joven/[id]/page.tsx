@@ -4,13 +4,13 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Loader2, Check, X, Calendar as CalendarIcon, ShieldAlert } from "lucide-react";
-import { collection, query, onSnapshot, where, getDocs, addDoc, deleteDoc, doc, getDoc, orderBy } from "firebase/firestore";
+import { collection, query, onSnapshot, where, addDoc, deleteDoc, doc, getDoc, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { useRouter, useParams } from "next/navigation";
 import { UserProfile, SessionEvent, AttendanceRecord } from "@/lib/types";
 
 export default function GestorManualJoven() {
-    const { user, profile, loading: authLoading } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const params = useParams();
     const id = params.id as string;
