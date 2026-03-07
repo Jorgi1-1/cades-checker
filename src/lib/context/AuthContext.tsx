@@ -29,9 +29,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists()) {
                         setProfile(docSnap.data() as UserProfile);
+                    } else {
+                        const defaultProfile = {
+                            uid: firebaseUser.uid,
+                            email: firebaseUser.email || '',
+                            role: 'joven' as const,
+                            displayName: firebaseUser.displayName || 'Usuario'
+                        };
+                        setProfile(defaultProfile as UserProfile);
                     }
                 } catch (error) {
                     console.error("Error fetching user profile:", error);
+                    setProfile({
+                        uid: firebaseUser.uid,
+                        email: firebaseUser.email || '',
+                        role: 'joven' as const,
+                        displayName: firebaseUser.displayName || 'Usuario'
+                    } as UserProfile);
                 }
             } else {
                 setProfile(null);

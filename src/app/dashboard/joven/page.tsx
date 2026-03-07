@@ -4,14 +4,16 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import { motion } from "framer-motion";
-import { Loader2, CalendarCheck, ShieldAlert, LogOut } from "lucide-react";
-import { collection, query, getDocs, where, onSnapshot } from "firebase/firestore";
+import { Loader2, CalendarCheck, ShieldAlert, LogOut, History } from "lucide-react";
+import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 
 export default function JovenDashboard() {
     const { user, profile, loading: authLoading } = useAuth();
+    const [events, setEvents] = useState<{ id: string; date: string | number }[]>([]);
+    const [attendanceDict, setAttendanceDict] = useState<Record<string, boolean>>({});
     const [totalEvents, setTotalEvents] = useState(0);
     const [attendedEvents, setAttendedEvents] = useState(0);
     const router = useRouter();
@@ -21,8 +23,10 @@ export default function JovenDashboard() {
         if (!user) return;
 
         // Listen to total events
-        const qEvents = query(collection(db, "events"));
+        const qEvents = query(collection(db, "events"), orderBy("date", "desc"));
         const unsubEvents = onSnapshot(qEvents, (snap) => {
+            const evts = snap.docs.map(d => ({ id: d.id, ...(d.data() as { date: string | number }) }));
+            setEvents(evts);
             setTotalEvents(snap.size); // The denominator
         });
 
@@ -30,6 +34,11 @@ export default function JovenDashboard() {
         const qAttended = query(collection(db, "attendance"), where("userId", "==", user.uid));
         const unsubAttended = onSnapshot(qAttended, (snap) => {
             setAttendedEvents(snap.size); // The numerator
+            const dict: Record<string, boolean> = {};
+            snap.docs.forEach(d => {
+                dict[d.data().eventId] = true;
+            });
+            setAttendanceDict(dict);
         });
 
         return () => {
@@ -38,18 +47,18 @@ export default function JovenDashboard() {
         };
     }, [user]);
 
-    if (authLoading) {
+    useEffect(() => {
+        if (!authLoading && (!user || profile?.role !== "joven")) {
+            router.push("/");
+        }
+    }, [user, profile, authLoading, router]);
+
+    if (authLoading || !user || profile?.role !== "joven") {
         return (
             <div className="min-h-screen bg-stone-950 flex items-center justify-center text-emerald-500">
                 <Loader2 className="w-8 h-8 animate-spin" />
             </div>
         );
-    }
-
-    if (!user || profile?.role !== "joven") {
-        // Basic protection
-        router.push("/");
-        return null;
     }
 
     const percentage = totalEvents === 0 ? 100 : Math.round((attendedEvents / totalEvents) * 100);
@@ -137,6 +146,46 @@ export default function JovenDashboard() {
                             <span className="text-rose-400 font-medium px-2 py-1 bg-rose-500/10 rounded-md text-xs">¡Meta peliaguda!</span>
                         ) : (
                             <span className="text-emerald-400 font-medium px-2 py-1 bg-emerald-500/10 rounded-md text-xs">¡Meta en curso!</span>
+                        )}
+                    </div>
+                </motion.div>
+
+                {/* History Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="bg-stone-900/80 backdrop-blur-xl border border-stone-800 rounded-3xl p-6 shadow-2xl space-y-4"
+                >
+                    <div className="flex items-center gap-2 text-stone-400 mb-2">
+                        <History className="w-4 h-4" />
+                        <h2 className="font-medium text-sm">Historial de Eventos</h2>
+                    </div>
+
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        {events.length === 0 ? (
+                            <p className="text-stone-500 text-sm italic text-center py-4">Aún no hay eventos registrados.</p>
+                        ) : (
+                            events.map(event => {
+                                const hasAttended = attendanceDict[event.id];
+                                const dateObj = new Date(event.date);
+                                return (
+                                    <div key={event.id} className="flex justify-between items-center p-3 rounded-2xl bg-stone-800/40 border border-stone-800/80">
+                                        <div>
+                                            <p className="text-sm font-medium text-stone-300 capitalize">
+                                                {dateObj.toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            {hasAttended ? (
+                                                <span className="text-emerald-400 text-xs font-bold px-2 py-1 bg-emerald-500/10 rounded-lg">Asistió</span>
+                                            ) : (
+                                                <span className="text-rose-400 text-xs font-bold px-2 py-1 bg-rose-500/10 rounded-lg">Falta</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })
                         )}
                     </div>
                 </motion.div>

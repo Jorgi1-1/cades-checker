@@ -30,11 +30,11 @@ export default function ScannerPage() {
     }, []);
 
 
-    const handleScan = async (result: any) => {
+    const handleScan = async (result: unknown) => {
         if (!result || !currentEventId || processing || !user) return;
 
         // The library usually returns an array of results or an object with text
-        const scannedText = typeof result === 'string' ? result : (result?.[0]?.rawValue || result?.text || null);
+        const scannedText = typeof result === 'string' ? result : (((result as { rawValue?: string }[])?.[0]?.rawValue) || ((result as { text?: string })?.text) || null);
 
         if (!scannedText) return;
 
@@ -70,6 +70,7 @@ export default function ScannerPage() {
             await addDoc(collection(db, "attendance"), {
                 userId: scannedText,
                 eventId: currentEventId,
+                // eslint-disable-next-line react-hooks/purity
                 timestamp: Date.now(),
                 scannedBy: user.uid
             });
@@ -130,13 +131,8 @@ export default function ScannerPage() {
                     {!processing && !feedback && (
                         <Scanner
                             onScan={handleScan}
-                            onError={(error) => console.log(error?.message)}
-                            options={{
-                                delayBetweenScanAttempts: 1000,
-                                delayBetweenScanSuccess: 2000
-                            }}
+                            onError={(error: unknown) => console.log((error as Error)?.message)}
                             components={{
-                                audio: false,
                                 finder: false
                             }}
                         />
@@ -161,7 +157,7 @@ export default function ScannerPage() {
                 <AnimatePresence>
                     {feedback === "success" && (
                         <motion.div
-                            initial={{ bg: "transparent" }}
+                            initial={{ backgroundColor: "transparent" }}
                             animate={{ backgroundColor: "rgba(16, 185, 129, 0.9)" }}
                             exit={{ opacity: 0 }}
                             className="absolute inset-0 z-40 flex flex-col items-center justify-center backdrop-blur-sm"
@@ -179,7 +175,7 @@ export default function ScannerPage() {
 
                     {feedback === "duplicate" && (
                         <motion.div
-                            initial={{ bg: "transparent" }}
+                            initial={{ backgroundColor: "transparent" }}
                             animate={{ backgroundColor: "rgba(245, 158, 11, 0.95)" }}
                             exit={{ opacity: 0 }}
                             className="absolute inset-0 z-40 flex flex-col items-center justify-center backdrop-blur-sm"
@@ -197,7 +193,7 @@ export default function ScannerPage() {
 
                     {feedback === "error" && (
                         <motion.div
-                            initial={{ bg: "transparent" }}
+                            initial={{ backgroundColor: "transparent" }}
                             animate={{ backgroundColor: "rgba(239, 68, 68, 0.95)" }}
                             exit={{ opacity: 0 }}
                             className="absolute inset-0 z-40 flex flex-col items-center justify-center backdrop-blur-sm"

@@ -64,7 +64,13 @@ export default function CoordinadorDashboard() {
         return () => unsubUsers();
     }, [user, totalEvents]);
 
-    if (authLoading) {
+    useEffect(() => {
+        if (!authLoading && (!user || profile?.role !== "coordinador")) {
+            router.push("/");
+        }
+    }, [user, profile, authLoading, router]);
+
+    if (authLoading || !user || profile?.role !== "coordinador") {
         return (
             <div className="min-h-screen bg-stone-950 flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
@@ -192,7 +198,11 @@ export default function CoordinadorDashboard() {
                             {jovenes.map((joven) => {
                                 const isDanger = totalEvents > 0 && joven.attendancePercentage < 80;
                                 return (
-                                    <tr key={joven.uid} className="bg-stone-800/30 hover:bg-stone-800/60 transition-colors group rounded-xl">
+                                    <tr
+                                        key={joven.uid}
+                                        onClick={() => router.push(`/dashboard/coordinador/joven/${joven.uid}`)}
+                                        className="bg-stone-800/30 hover:bg-stone-800/60 transition-colors group cursor-pointer"
+                                    >
                                         <td className="py-4 px-4 rounded-l-xl">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-2 h-2 rounded-full ${isDanger ? 'bg-rose-500' : 'bg-emerald-500'}`} />
@@ -201,14 +211,14 @@ export default function CoordinadorDashboard() {
                                             <span className="text-xs text-stone-500 font-mono ml-5 block mt-0.5">{joven.email}</span>
                                         </td>
                                         <td className="py-4 px-4 text-center">
-                                            <span className="text-stone-300 font-mono bg-stone-800/50 py-1 px-3 rounded-lg border border-stone-800">
+                                            <span className="text-stone-300 font-mono bg-stone-800/50 py-1 px-3 rounded-lg border border-stone-800 group-hover:border-emerald-500/30 transition-colors">
                                                 {joven.attendedEvents} / {totalEvents}
                                             </span>
                                         </td>
                                         <td className="py-4 px-4 rounded-r-xl text-right flex justify-end">
                                             <div className={`font-bold font-mono px-3 py-1 rounded-lg inline-block w-20 text-center ${isDanger
-                                                    ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                                                    : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                                ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                                : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                                                 }`}>
                                                 {joven.attendancePercentage}%
                                             </div>
