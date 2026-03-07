@@ -5,7 +5,7 @@ import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPass
 import { auth, db, googleProvider } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { QrCode, Loader2, LogIn } from "lucide-react";
+import { Loader2, LogIn, ClipboardCheck } from "lucide-react";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useAuth } from "@/lib/context/AuthContext";
 
@@ -160,7 +160,7 @@ export default function Home() {
         <div className="bg-[#111]/80 backdrop-blur-xl border border-stone-800 rounded-3xl p-8 shadow-2xl relative z-10 text-white">
           <div className="flex justify-center mb-6">
             <div className="bg-gradient-to-tr from-brand-rojo to-brand-naranja p-4 rounded-2xl shadow-lg shadow-brand-rojo/30">
-              <QrCode className="w-10 h-10 text-brand-blanco" />
+              <ClipboardCheck className="w-10 h-10 text-brand-blanco" />
             </div>
           </div>
 
