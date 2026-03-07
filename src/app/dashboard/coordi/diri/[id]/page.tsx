@@ -156,7 +156,7 @@ export default function GestorManualDiri() {
 
                 <div className="mb-4 flex items-center gap-3">
                     <CalendarIcon className="w-6 h-6 text-brand-gris" />
-                    <h2 className="text-xl font-bold text-brand-blanco">Historial Estudiantil</h2>
+                    <h2 className="text-xl font-bold text-brand-blanco">Historial de asistencias</h2>
                 </div>
 
                 <div className="space-y-3">

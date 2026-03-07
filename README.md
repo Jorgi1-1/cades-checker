@@ -4,12 +4,12 @@ Sistema de asistencia invertido desarrollado con Next.js, Firebase y Tailwind CS
 
 ## Características Principales
 
-- **Asistencia con Código QR (Modelo Invertido)**: En lugar de que los estudiantes escaneen un código QR estático proyectado o impreso, la app genera un código QR criptográfico, único y caducable en los teléfonos de los diris. Los coordinadores (coordis y asesores) utilizan el escáner web incorporado en su dashboard para escanear a cada uno a medida que llegan. 
+- **Asistencia con Código QR (Modelo Invertido)**: En lugar de que los diris escaneen un código QR estático proyectado o impreso, la app genera un código QR criptográfico, único y caducable en los teléfonos de los diris. Los coordinadores (coordis y asesores) utilizan el escáner web incorporado en su dashboard para escanear a cada uno a medida que llegan. 
 - **Roles de Usuario**:
-  - `diri`: Los estudiantes o participantes. Tienen un panel donde acceden a su código QR y a su historial de asistencias, visualizando además su porcentaje local de rendimiento que usa código de color verde, amarillo o rojo como retroalimentación real.
+  - `diri`: Los participantes. Tienen un panel donde acceden a su código QR y a su historial de asistencias, visualizando además su porcentaje local de rendimiento que usa código de color verde, amarillo o rojo como retroalimentación real.
   - `coordi`: Administradores. Tienen el control total para habilitar las asambleas (sesiones), abrir la cámara (modo escáner masivo), corregir asistencias erróneas manualmente (anular faltas/retardos), y modificar los roles sistémicos de la plataforma.
   - `asesor`: Staff u observadores. Comparten el mismo tablero visual que los coordis para monitorear tendencias, ver nóminas y utilizar el escáner, pero no pueden iniciar nuevas *Asambleas/Juntas* ni modificar campos en la base de datos o cuentas de terceros.
-- **Sistema de Retardos (Late Mode)**: En la pestaña de escriptación, el Coordi puede activar una penalización en donde todas las llegadas registradas a partir de una cierta franja de tiempo figurarán como *Retardos* y no como *Asistencias*. Esto afectará el puntaje general del estudiante.
+- **Sistema de Retardos (Late Mode)**: En la pestaña de escriptación, el Coordi puede activar una penalización en donde todas las llegadas registradas a partir de una cierta franja de tiempo figurarán como *Retardos* y no como *Asistencias*. Esto afectará el puntaje general del diri.
 - **Progreso Visual y Recompensas**: Según el desempeño (*attendancePercentage*) de un `diri`, el dashboard ajusta su diseño de texto e interfaz. Debajo del 80% genera señales de alerta (Acentos Rojos).
 
 ## Tech Stack
