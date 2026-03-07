@@ -164,7 +164,7 @@ export default function Home() {
             </div>
           </div>
 
-          <h1 className="text-3xl font-bold text-center mb-2 tracking-tight">Cades Checker</h1>
+          <h1 className="text-3xl font-bold text-center mb-2 tracking-tight">Asistencia Cadés</h1>
           <p className="text-brand-gris text-center mb-8">Pase de lista Cadés</p>
 
           <div className="space-y-4">
@@ -209,7 +209,7 @@ export default function Home() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="w-full bg-[#111] border border-stone-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-rojo focus:border-transparent transition-all placeholder:text-stone-500"
-                  placeholder="usuario@cades.com"
+                  placeholder="usuario@mail.com"
                 />
               </div>
 

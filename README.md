@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pase de lista Cadés
 
-## Getting Started
+Sistema de asistencia invertido desarrollado con Next.js, Firebase y Tailwind CSS.
 
-First, run the development server:
+## Características Principales
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Asistencia con Código QR (Modelo Invertido)**: En lugar de que los estudiantes escaneen un código QR estático proyectado o impreso, la app genera un código QR criptográfico, único y caducable en los teléfonos de los diris. Los coordinadores (coordis y asesores) utilizan el escáner web incorporado en su dashboard para escanear a cada uno a medida que llegan. 
+- **Roles de Usuario**:
+  - `diri`: Los estudiantes o participantes. Tienen un panel donde acceden a su código QR y a su historial de asistencias, visualizando además su porcentaje local de rendimiento que usa código de color verde, amarillo o rojo como retroalimentación real.
+  - `coordi`: Administradores. Tienen el control total para habilitar las asambleas (sesiones), abrir la cámara (modo escáner masivo), corregir asistencias erróneas manualmente (anular faltas/retardos), y modificar los roles sistémicos de la plataforma.
+  - `asesor`: Staff u observadores. Comparten el mismo tablero visual que los coordis para monitorear tendencias, ver nóminas y utilizar el escáner, pero no pueden iniciar nuevas *Asambleas/Juntas* ni modificar campos en la base de datos o cuentas de terceros.
+- **Sistema de Retardos (Late Mode)**: En la pestaña de escriptación, el Coordi puede activar una penalización en donde todas las llegadas registradas a partir de una cierta franja de tiempo figurarán como *Retardos* y no como *Asistencias*. Esto afectará el puntaje general del estudiante.
+- **Progreso Visual y Recompensas**: Según el desempeño (*attendancePercentage*) de un `diri`, el dashboard ajusta su diseño de texto e interfaz. Debajo del 80% genera señales de alerta (Acentos Rojos).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework**: [Next.js 14+ (App Router)](https://nextjs.org/)
+- **Cámara y Lector QR**: `@yudiel/react-qr-scanner` y `react-qr-code`
+- **Animaciones**: `framer-motion` + `lucide-react` para iconos SVG.
+- **Styling**: Tailwind CSS
+- **BaaS (Backend, Base de Datos, Autenticación)**: Firebase (Firestore y Auth)
+- **Deployment**: Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Instrucciones de Desarrollo
 
-## Learn More
+Para ejecutar este proyecto en tu entorno local:
 
-To learn more about Next.js, take a look at the following resources:
+1. **Instalar dependencias**:
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Variables de Entorno**:
+   Necesitarás configurar tus variables de Firebase en un archivo `.env.local`:
+   ```env
+   NEXT_PUBLIC_FIREBASE_API_KEY=tu_api_key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=tu_dominio.firebaseapp.com
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=tu_project_id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=tu_bucket.appspot.com
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=tus_ids
+   NEXT_PUBLIC_FIREBASE_APP_ID=tu_app_id
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **Iniciar el Servidor**:
+   ```bash
+   npm run dev
+   ```
 
-## Deploy on Vercel
+Abre [http://localhost:3000](http://localhost:3000) con tu navegador para ver la pestaña inicial.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Contacto & Créditos
+Esta aplicación fue personalizada estéticamente para integrar colores de marca y optimizar la fluidez directiva de la comunidad Cadés.
