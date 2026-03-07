@@ -144,19 +144,19 @@ export default function ScannerPage() {
 
     if (authLoading || !currentEventId || (!profile || (profile.role !== "coordi" && profile.role !== "asesor"))) {
         return (
-            <div className="min-h-screen bg-stone-950 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+            <div className="min-h-screen bg-brand-negro flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-brand-rojo" />
             </div>
         );
     }
 
     return (
-        <div className="fixed inset-0 bg-stone-950 flex flex-col items-center justify-center p-4">
+        <div className="fixed inset-0 bg-brand-negro flex flex-col items-center justify-center p-4">
 
             {/* Back Button */}
             <button
                 onClick={() => router.back()}
-                className={`absolute top-8 left-8 p-3 backdrop-blur-md rounded-full text-white z-50 transition-colors ${lateMode ? 'bg-amber-900/80 hover:bg-amber-800' : 'bg-stone-900/80 hover:bg-stone-800'}`}
+                className={`absolute top-8 left-8 p-3 backdrop-blur-md rounded-full text-brand-blanco z-50 transition-colors ${lateMode ? 'bg-brand-naranja/80 hover:bg-[#e08922]' : 'bg-[#111]/80 hover:bg-[#222]'}`}
             >
                 <ArrowLeft className="w-6 h-6" />
             </button>
@@ -164,9 +164,9 @@ export default function ScannerPage() {
             {/* Late Mode Toggle Button */}
             <button
                 onClick={toggleLateMode}
-                className={`absolute top-8 right-8 px-4 py-3 backdrop-blur-md rounded-2xl text-white font-bold text-sm tracking-wider uppercase z-50 transition-all shadow-lg flex items-center gap-2 ${lateMode
-                    ? 'bg-amber-500 hover:bg-amber-400 text-amber-950 shadow-amber-500/20'
-                    : 'bg-stone-900/80 border-2 border-stone-800 hover:border-stone-700 text-stone-400'
+                className={`absolute top-8 right-8 px-4 py-3 backdrop-blur-md rounded-2xl text-brand-blanco font-bold text-sm tracking-wider uppercase z-50 transition-all shadow-lg flex items-center gap-2 ${lateMode
+                    ? 'bg-brand-naranja hover:bg-[#e08922] text-brand-negro shadow-brand-naranja/20'
+                    : 'bg-[#111] border-2 border-stone-800 hover:border-[#333] text-brand-gris'
                     }`}
             >
                 {lateMode ? (
@@ -177,11 +177,11 @@ export default function ScannerPage() {
             </button>
 
             <div className="text-center mb-8 relative z-20">
-                <h1 className="text-2xl font-bold text-white mb-2">Escaneando Pase</h1>
-                <p className="text-stone-400">Centra el código QR del diri en el recuadro</p>
+                <h1 className="text-2xl font-bold text-brand-blanco mb-2">Escaneando Pase</h1>
+                <p className="text-brand-gris">Centra el código QR del diri en el recuadro</p>
             </div>
 
-            <div className="relative w-full max-w-sm aspect-[3/4] rounded-3xl overflow-hidden bg-stone-900 shadow-2xl border-4 border-stone-800">
+            <div className="relative w-full max-w-sm aspect-[3/4] rounded-3xl overflow-hidden bg-brand-negro shadow-2xl border-4 border-[#222]">
 
                 {/* The active scanner */}
                 <div className="absolute inset-0">
@@ -198,14 +198,14 @@ export default function ScannerPage() {
 
                 {/* Viewfinder Target */}
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    <div className={`w-64 h-64 border-2 rounded-xl flex flex-col justify-between transition-colors ${lateMode ? 'border-amber-500/50' : 'border-emerald-500/50'}`}>
+                    <div className={`w-64 h-64 border-2 rounded-xl flex flex-col justify-between transition-colors ${lateMode ? 'border-brand-naranja/50' : 'border-brand-rojo/50'}`}>
                         <div className="flex justify-between w-full h-8">
-                            <div className={`w-8 border-t-4 border-l-4 rounded-tl-lg transition-colors ${lateMode ? 'border-amber-400' : 'border-emerald-400'}`}></div>
-                            <div className={`w-8 border-t-4 border-r-4 rounded-tr-lg transition-colors ${lateMode ? 'border-amber-400' : 'border-emerald-400'}`}></div>
+                            <div className={`w-8 border-t-4 border-l-4 rounded-tl-lg transition-colors ${lateMode ? 'border-brand-naranja' : 'border-brand-rojo'}`}></div>
+                            <div className={`w-8 border-t-4 border-r-4 rounded-tr-lg transition-colors ${lateMode ? 'border-brand-naranja' : 'border-brand-rojo'}`}></div>
                         </div>
                         <div className="flex justify-between w-full h-8">
-                            <div className={`w-8 border-b-4 border-l-4 rounded-bl-lg transition-colors ${lateMode ? 'border-amber-400' : 'border-emerald-400'}`}></div>
-                            <div className={`w-8 border-b-4 border-r-4 rounded-br-lg transition-colors ${lateMode ? 'border-amber-400' : 'border-emerald-400'}`}></div>
+                            <div className={`w-8 border-b-4 border-l-4 rounded-bl-lg transition-colors ${lateMode ? 'border-brand-naranja' : 'border-brand-rojo'}`}></div>
+                            <div className={`w-8 border-b-4 border-r-4 rounded-br-lg transition-colors ${lateMode ? 'border-brand-naranja' : 'border-brand-rojo'}`}></div>
                         </div>
                     </div>
                 </div>
@@ -215,7 +215,7 @@ export default function ScannerPage() {
                     {feedback === "success" && (
                         <motion.div
                             initial={{ backgroundColor: "transparent" }}
-                            animate={{ backgroundColor: "rgba(16, 185, 129, 0.9)" }}
+                            animate={{ backgroundColor: "rgba(146, 104, 60, 0.95)" }}
                             exit={{ opacity: 0 }}
                             className="absolute inset-0 z-40 flex flex-col items-center justify-center backdrop-blur-sm"
                         >
@@ -233,7 +233,7 @@ export default function ScannerPage() {
                     {feedback === "duplicate" && (
                         <motion.div
                             initial={{ backgroundColor: "transparent" }}
-                            animate={{ backgroundColor: "rgba(245, 158, 11, 0.95)" }}
+                            animate={{ backgroundColor: "rgba(241, 158, 56, 0.95)" }}
                             exit={{ opacity: 0 }}
                             className="absolute inset-0 z-40 flex flex-col items-center justify-center backdrop-blur-sm"
                         >
@@ -251,7 +251,7 @@ export default function ScannerPage() {
                     {feedback === "expired" && (
                         <motion.div
                             initial={{ backgroundColor: "transparent" }}
-                            animate={{ backgroundColor: "rgba(225, 29, 72, 0.95)" }}
+                            animate={{ backgroundColor: "rgba(219, 73, 62, 0.95)" }}
                             exit={{ opacity: 0 }}
                             className="absolute inset-0 z-40 flex flex-col items-center justify-center backdrop-blur-sm"
                         >
@@ -263,14 +263,14 @@ export default function ScannerPage() {
                                 <XCircle className="w-24 h-24 text-white drop-shadow-lg mb-4" />
                             </motion.div>
                             <h2 className="text-2xl font-bold text-white tracking-widest text-center">QR CADUCADO</h2>
-                            <p className="text-white/80 font-medium mt-2 max-w-xs text-center">Este pase pertenece a una clase pasada o es falso.</p>
+                            <p className="text-white/80 font-medium mt-2 max-w-xs text-center">Este pase pertenece a una asamblea/junta anterior o es inválido.</p>
                         </motion.div>
                     )}
 
                     {feedback === "error" && (
                         <motion.div
                             initial={{ backgroundColor: "transparent" }}
-                            animate={{ backgroundColor: "rgba(239, 68, 68, 0.95)" }}
+                            animate={{ backgroundColor: "rgba(219, 73, 62, 0.95)" }}
                             exit={{ opacity: 0 }}
                             className="absolute inset-0 z-40 flex flex-col items-center justify-center backdrop-blur-sm"
                         >

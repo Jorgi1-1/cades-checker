@@ -8,8 +8,18 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-outfit), sans-serif;
+  --font-body: var(--font-dm-sans), sans-serif;
+  
+  /* Brand Colors */
+  --color-brand-negro: #000000;
+  --color-brand-rojo: #db493e;
+  --color-brand-blanco: #ffffff;
+  --color-brand-gris: #b9babb;
+  --color-brand-naranja: #f19e38;
+  --color-brand-beige: #f9d9b7;
+  --color-brand-cafe: #92683c;
+  --color-brand-vino: #6f1a0f;
 }
 
 @media (prefers-color-scheme: dark) {

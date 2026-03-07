@@ -95,17 +95,17 @@ export default function GestorManualDiri() {
 
     if (authLoading || loading || !profile || (profile.role !== "coordi" && profile.role !== "asesor")) {
         return (
-            <div className="min-h-screen bg-stone-950 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+            <div className="min-h-screen bg-brand-negro flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-brand-rojo" />
             </div>
         );
     }
 
     if (!diri) {
         return (
-            <div className="min-h-screen bg-stone-950 text-white flex flex-col items-center justify-center gap-4">
+            <div className="min-h-screen bg-brand-negro text-brand-blanco flex flex-col items-center justify-center gap-4">
                 <p>Diri no encontrado.</p>
-                <button onClick={() => router.back()} className="text-emerald-500">Volver</button>
+                <button onClick={() => router.back()} className="text-brand-naranja">Volver</button>
             </div>
         );
     }
@@ -116,14 +116,14 @@ export default function GestorManualDiri() {
     const isDanger = events.length > 0 && percentage < 80;
 
     return (
-        <div className="min-h-screen bg-stone-950 text-stone-100 p-6 relative overflow-hidden pb-32">
+        <div className="min-h-screen bg-brand-negro text-brand-blanco p-6 relative overflow-hidden pb-32">
             {/* Background elements */}
-            <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-brand-cafe/10 rounded-full blur-[100px] pointer-events-none" />
 
             <div className="max-w-3xl mx-auto relative z-10">
                 <button
                     onClick={() => router.back()}
-                    className="flex items-center gap-2 text-stone-400 hover:text-white transition-colors mb-6"
+                    className="flex items-center gap-2 text-brand-gris hover:text-brand-blanco transition-colors mb-6"
                 >
                     <ArrowLeft className="w-5 h-5" />
                     <span>Volver al Panel</span>
@@ -132,20 +132,20 @@ export default function GestorManualDiri() {
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="bg-stone-900/60 backdrop-blur-xl border border-stone-800 rounded-3xl p-6 md:p-8 mb-8"
+                    className="bg-[#111]/80 backdrop-blur-xl border border-[#222] rounded-3xl p-6 md:p-8 mb-8"
                 >
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div>
-                            <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
+                            <h1 className="text-3xl font-bold tracking-tight text-brand-blanco mb-2">
                                 {diri.displayName || "Sin nombre"}
                             </h1>
-                            <p className="text-stone-400 font-mono text-sm">{diri.email}</p>
+                            <p className="text-brand-gris font-mono text-sm">{diri.email}</p>
                         </div>
 
                         <div className="flex items-center gap-4">
                             <div className="text-right">
-                                <p className="text-stone-400 text-sm mb-1 text-center">Asistencia Mínima</p>
-                                <div className={`font-mono text-xl font-bold px-4 py-2 rounded-xl flex items-center gap-2 ${isDanger ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'}`}>
+                                <p className="text-brand-gris text-sm mb-1 text-center">Asistencia Mínima</p>
+                                <div className={`font-mono text-xl font-bold px-4 py-2 rounded-xl flex items-center gap-2 ${isDanger ? 'bg-brand-rojo/10 text-brand-rojo border border-brand-rojo/30' : 'bg-[#222] text-brand-naranja border border-brand-naranja/20'}`}>
                                     {isDanger && <ShieldAlert className="w-5 h-5" />}
                                     {percentage}%
                                 </div>
@@ -155,13 +155,13 @@ export default function GestorManualDiri() {
                 </motion.div>
 
                 <div className="mb-4 flex items-center gap-3">
-                    <CalendarIcon className="w-6 h-6 text-stone-400" />
-                    <h2 className="text-xl font-bold text-stone-200">Historial Estudiantil</h2>
+                    <CalendarIcon className="w-6 h-6 text-brand-gris" />
+                    <h2 className="text-xl font-bold text-brand-blanco">Historial Estudiantil</h2>
                 </div>
 
                 <div className="space-y-3">
                     {events.length === 0 && (
-                        <div className="bg-stone-900/40 border border-stone-800 rounded-2xl p-6 text-center text-stone-500">
+                        <div className="bg-[#111] border border-[#222] rounded-2xl p-6 text-center text-brand-gris">
                             No hay asambleas o juntas registradas.
                         </div>
                     )}
@@ -179,13 +179,13 @@ export default function GestorManualDiri() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.05 }}
-                                className="bg-stone-900/60 backdrop-blur-xl border border-stone-800 p-4 md:p-5 rounded-2xl flex items-center justify-between group hover:border-stone-700 transition-colors"
+                                className="bg-[#111] backdrop-blur-xl border border-[#222] p-4 md:p-5 rounded-2xl flex items-center justify-between group hover:border-[#333] transition-colors"
                             >
                                 <div>
-                                    <p className="text-stone-200 font-medium capitalize">
+                                    <p className="text-brand-blanco font-medium capitalize">
                                         {event.type || 'asamblea'} de {eventDate.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                                     </p>
-                                    <p className="text-stone-500 text-sm mt-1">
+                                    <p className="text-brand-gris text-sm mt-1">
                                         ID: <span className="font-mono text-xs">{event.id.slice(0, 8)}</span>
                                     </p>
                                 </div>
@@ -194,8 +194,8 @@ export default function GestorManualDiri() {
                                 {profile.role === "coordi" && (
                                     <div className="flex gap-2">
                                         {isToggling ? (
-                                            <div className="h-10 w-32 flex items-center justify-center border border-stone-800 rounded-xl bg-stone-900/50">
-                                                <Loader2 className="w-5 h-5 animate-spin text-stone-500" />
+                                            <div className="h-10 w-32 flex items-center justify-center border border-[#222] rounded-xl bg-[#111]">
+                                                <Loader2 className="w-5 h-5 animate-spin text-brand-gris" />
                                             </div>
                                         ) : (
                                             <>
@@ -203,8 +203,8 @@ export default function GestorManualDiri() {
                                                 <button
                                                     onClick={() => handleStatusChange(event.id, record, null)}
                                                     className={`p-2 rounded-xl border transition-all active:scale-95 ${currentStatus === "absent"
-                                                        ? "bg-rose-500/20 text-rose-400 border-rose-500/30"
-                                                        : "bg-transparent text-stone-600 border-stone-800 hover:text-rose-400 hover:border-rose-500/30 hover:bg-rose-500/5"
+                                                        ? "bg-brand-rojo/20 text-brand-rojo border-brand-rojo/30"
+                                                        : "bg-transparent text-[#555] border-[#222] hover:text-brand-rojo hover:border-brand-rojo/30 hover:bg-brand-rojo/5"
                                                         }`}
                                                     title="Marcar Falta"
                                                 >
@@ -215,8 +215,8 @@ export default function GestorManualDiri() {
                                                 <button
                                                     onClick={() => handleStatusChange(event.id, record, "late")}
                                                     className={`p-2 rounded-xl border transition-all active:scale-95 flex items-center gap-1 ${currentStatus === "late"
-                                                        ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
-                                                        : "bg-transparent text-stone-600 border-stone-800 hover:text-amber-400 hover:border-amber-500/30 hover:bg-amber-500/5"
+                                                        ? "bg-brand-naranja/20 text-brand-naranja border-brand-naranja/30"
+                                                        : "bg-transparent text-[#555] border-[#222] hover:text-brand-naranja hover:border-brand-naranja/30 hover:bg-brand-naranja/5"
                                                         }`}
                                                     title="Marcar Retardo"
                                                 >
@@ -228,8 +228,8 @@ export default function GestorManualDiri() {
                                                 <button
                                                     onClick={() => handleStatusChange(event.id, record, "present")}
                                                     className={`p-2 rounded-xl border transition-all active:scale-95 flex items-center gap-1 ${currentStatus === "present"
-                                                        ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-                                                        : "bg-transparent text-stone-600 border-stone-800 hover:text-emerald-400 hover:border-emerald-500/30 hover:bg-emerald-500/5"
+                                                        ? "bg-brand-cafe/20 text-brand-cafe border-brand-cafe/30"
+                                                        : "bg-transparent text-[#555] border-[#222] hover:text-brand-cafe hover:border-brand-cafe/30 hover:bg-brand-cafe/5"
                                                         }`}
                                                     title="Marcar Asistencia"
                                                 >
