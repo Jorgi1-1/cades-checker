@@ -198,7 +198,7 @@ export default function CoordiDashboard() {
                             <QrCode className="w-6 h-6 text-brand-naranja" />
                         </div>
                         <h2 className="text-xl font-bold mb-2">Modo Escáner</h2>
-                        <p className="text-sm text-brand-gris mb-6">Abre la cámara para comenzar a registrar llegadas masivamente. Funciona para el evento más reciente.</p>
+                        <p className="text-sm text-brand-gris mb-6">Abre la cámara para comenzar a registrar llegadas.</p>
                     </div>
 
                     <Link href="/dashboard/coordi/scanner">
@@ -299,7 +299,7 @@ export default function CoordiDashboard() {
                             <thead>
                                 <tr className="text-brand-gris text-sm font-medium">
                                     <th className="pb-3 px-4 font-normal">Usuario</th>
-                                    <th className="pb-3 px-4 font-normal text-right">Rol de Sistema</th>
+                                    <th className="pb-3 px-4 font-normal text-right">Cargo</th>
                                 </tr>
                             </thead>
                             <tbody>

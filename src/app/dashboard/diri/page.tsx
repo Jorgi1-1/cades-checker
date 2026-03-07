@@ -92,7 +92,7 @@ export default function DiriDashboard() {
             {/* Header */}
             <div className="flex justify-between items-center mb-8 relative z-10 p-2">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Hola, {profile?.displayName?.split(" ")[0] || "Diri"} 👋</h1>
+                    <h1 className="text-2xl font-bold tracking-tight">Hola, {profile?.displayName?.split(" ")[0] || "Diri"}!</h1>
                     <p className="text-brand-gris text-sm mt-1">Pase de lista Cadés</p>
                 </div>
                 <button onClick={handleLogout} className="p-2 bg-[#111] border border-stone-800 hover:bg-[#222] rounded-full transition-colors active:scale-95 text-brand-gris">
