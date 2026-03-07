@@ -4,17 +4,18 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, CheckCircle, Loader2, XCircle } from "lucide-react";
-import { collection, query, orderBy, limit, onSnapshot, getDocs, addDoc, where } from "firebase/firestore";
+import { collection, query, orderBy, limit, onSnapshot, getDocs, addDoc, where, updateDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
 import { Scanner } from '@yudiel/react-qr-scanner';
 
 export default function ScannerPage() {
-    const { user, loading: authLoading } = useAuth();
+    const { user, profile, loading: authLoading } = useAuth();
     const router = useRouter();
     const [currentEventId, setCurrentEventId] = useState<string | null>(null);
+    const [lateMode, setLateMode] = useState<boolean>(false);
 
-    const [feedback, setFeedback] = useState<"success" | "duplicate" | "error" | null>(null);
+    const [feedback, setFeedback] = useState<"success" | "duplicate" | "error" | "expired" | null>(null);
     const [processing, setProcessing] = useState(false);
 
     // Get current event directly
@@ -22,7 +23,9 @@ export default function ScannerPage() {
         const q = query(collection(db, "events"), orderBy("date", "desc"), limit(1));
         const unsub = onSnapshot(q, (snap) => {
             if (!snap.empty) {
-                setCurrentEventId(snap.docs[0].id);
+                const eventDoc = snap.docs[0];
+                setCurrentEventId(eventDoc.id);
+                setLateMode(!!eventDoc.data().lateMode);
             }
         });
 
@@ -42,8 +45,36 @@ export default function ScannerPage() {
 
 
         try {
+            // Decrypt QR Payload
+            // Format is { u: string, e: string }
+            let payload;
+            try {
+                payload = JSON.parse(scannedText);
+            } catch {
+                // Not a JSON QR (legacy string QR). For security, we reject it now.
+                setFeedback("error");
+                setTimeout(() => resetScanner(), 2000);
+                return;
+            }
+
+            const scannedUserId = payload.u;
+            const scannedEventId = payload.e;
+
+            if (!scannedUserId || !scannedEventId) {
+                setFeedback("error");
+                setTimeout(() => resetScanner(), 2000);
+                return;
+            }
+
+            // Anti-Fraud: Does the QR Event ID match the Door's Active Event ID?
+            if (scannedEventId !== currentEventId) {
+                setFeedback("expired");
+                setTimeout(() => resetScanner(), 3000);
+                return;
+            }
+
             // 1. Verify user exists
-            const userQuery = query(collection(db, "users"), where("uid", "==", scannedText));
+            const userQuery = query(collection(db, "users"), where("uid", "==", scannedUserId));
             const userSnaps = await getDocs(userQuery);
 
             if (userSnaps.empty) {
@@ -56,7 +87,7 @@ export default function ScannerPage() {
             const attQuery = query(
                 collection(db, "attendance"),
                 where("eventId", "==", currentEventId),
-                where("userId", "==", scannedText)
+                where("userId", "==", scannedUserId)
             );
             const attSnaps = await getDocs(attQuery);
 
@@ -68,11 +99,12 @@ export default function ScannerPage() {
 
             // 3. Register Attendance
             await addDoc(collection(db, "attendance"), {
-                userId: scannedText,
+                userId: scannedUserId,
                 eventId: currentEventId,
                 // eslint-disable-next-line react-hooks/purity
                 timestamp: Date.now(),
-                scannedBy: user.uid
+                scannedBy: user.uid,
+                status: lateMode ? "late" : "present"
             });
 
             // Show success feedback
@@ -99,7 +131,18 @@ export default function ScannerPage() {
         setProcessing(false);
     };
 
-    if (authLoading || !currentEventId) {
+    const toggleLateMode = async () => {
+        if (!currentEventId) return;
+        try {
+            await updateDoc(doc(db, "events", currentEventId), {
+                lateMode: !lateMode
+            });
+        } catch (e) {
+            console.error("Error toggling late mode", e);
+        }
+    };
+
+    if (authLoading || !currentEventId || (!profile || (profile.role !== "coordi" && profile.role !== "asesor"))) {
         return (
             <div className="min-h-screen bg-stone-950 flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
@@ -113,14 +156,29 @@ export default function ScannerPage() {
             {/* Back Button */}
             <button
                 onClick={() => router.back()}
-                className="absolute top-8 left-8 p-3 bg-stone-900/80 backdrop-blur-md rounded-full text-white z-50 hover:bg-stone-800 transition-colors"
+                className={`absolute top-8 left-8 p-3 backdrop-blur-md rounded-full text-white z-50 transition-colors ${lateMode ? 'bg-amber-900/80 hover:bg-amber-800' : 'bg-stone-900/80 hover:bg-stone-800'}`}
             >
                 <ArrowLeft className="w-6 h-6" />
             </button>
 
+            {/* Late Mode Toggle Button */}
+            <button
+                onClick={toggleLateMode}
+                className={`absolute top-8 right-8 px-4 py-3 backdrop-blur-md rounded-2xl text-white font-bold text-sm tracking-wider uppercase z-50 transition-all shadow-lg flex items-center gap-2 ${lateMode
+                    ? 'bg-amber-500 hover:bg-amber-400 text-amber-950 shadow-amber-500/20'
+                    : 'bg-stone-900/80 border-2 border-stone-800 hover:border-stone-700 text-stone-400'
+                    }`}
+            >
+                {lateMode ? (
+                    <>Modo Retardo Activo</>
+                ) : (
+                    <>Activar Retardos</>
+                )}
+            </button>
+
             <div className="text-center mb-8 relative z-20">
                 <h1 className="text-2xl font-bold text-white mb-2">Escaneando Pase</h1>
-                <p className="text-stone-400">Centra el código QR del alumno en el recuadro</p>
+                <p className="text-stone-400">Centra el código QR del diri en el recuadro</p>
             </div>
 
             <div className="relative w-full max-w-sm aspect-[3/4] rounded-3xl overflow-hidden bg-stone-900 shadow-2xl border-4 border-stone-800">
@@ -140,14 +198,14 @@ export default function ScannerPage() {
 
                 {/* Viewfinder Target */}
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    <div className="w-64 h-64 border-2 border-emerald-500/50 rounded-xl flex flex-col justify-between">
+                    <div className={`w-64 h-64 border-2 rounded-xl flex flex-col justify-between transition-colors ${lateMode ? 'border-amber-500/50' : 'border-emerald-500/50'}`}>
                         <div className="flex justify-between w-full h-8">
-                            <div className="w-8 border-t-4 border-l-4 border-emerald-400 rounded-tl-lg"></div>
-                            <div className="w-8 border-t-4 border-r-4 border-emerald-400 rounded-tr-lg"></div>
+                            <div className={`w-8 border-t-4 border-l-4 rounded-tl-lg transition-colors ${lateMode ? 'border-amber-400' : 'border-emerald-400'}`}></div>
+                            <div className={`w-8 border-t-4 border-r-4 rounded-tr-lg transition-colors ${lateMode ? 'border-amber-400' : 'border-emerald-400'}`}></div>
                         </div>
                         <div className="flex justify-between w-full h-8">
-                            <div className="w-8 border-b-4 border-l-4 border-emerald-400 rounded-bl-lg"></div>
-                            <div className="w-8 border-b-4 border-r-4 border-emerald-400 rounded-br-lg"></div>
+                            <div className={`w-8 border-b-4 border-l-4 rounded-bl-lg transition-colors ${lateMode ? 'border-amber-400' : 'border-emerald-400'}`}></div>
+                            <div className={`w-8 border-b-4 border-r-4 rounded-br-lg transition-colors ${lateMode ? 'border-amber-400' : 'border-emerald-400'}`}></div>
                         </div>
                     </div>
                 </div>
@@ -187,6 +245,25 @@ export default function ScannerPage() {
                                 <CheckCircle className="w-24 h-24 text-white drop-shadow-lg mb-4 opacity-50" />
                             </motion.div>
                             <h2 className="text-2xl font-bold text-white tracking-widest uppercase text-center px-4">YA ESTABA <br />REGISTRADO</h2>
+                        </motion.div>
+                    )}
+
+                    {feedback === "expired" && (
+                        <motion.div
+                            initial={{ backgroundColor: "transparent" }}
+                            animate={{ backgroundColor: "rgba(225, 29, 72, 0.95)" }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 z-40 flex flex-col items-center justify-center backdrop-blur-sm"
+                        >
+                            <motion.div
+                                initial={{ scale: 0.5, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ type: "spring", stiffness: 200 }}
+                            >
+                                <XCircle className="w-24 h-24 text-white drop-shadow-lg mb-4" />
+                            </motion.div>
+                            <h2 className="text-2xl font-bold text-white tracking-widest text-center">QR CADUCADO</h2>
+                            <p className="text-white/80 font-medium mt-2 max-w-xs text-center">Este pase pertenece a una clase pasada o es falso.</p>
                         </motion.div>
                     )}
 

@@ -21,10 +21,10 @@ export default function Home() {
 
   useEffect(() => {
     if (!authLoading && authUser && profile) {
-      if (profile.role === "coordinador") {
-        router.push("/dashboard/coordinador");
+      if (profile.role === "coordi" || profile.role === "asesor") {
+        router.push("/dashboard/coordi");
       } else {
-        router.push("/dashboard/joven");
+        router.push("/dashboard/diri");
       }
     }
   }, [authUser, profile, authLoading, router]);
@@ -79,7 +79,7 @@ export default function Home() {
         uid: user.uid,
         email: user.email,
         displayName: nombre,
-        role: "joven",
+        role: "diri",
         createdAt: Date.now()
       }).catch(console.error);
 
@@ -114,7 +114,7 @@ export default function Home() {
           uid: user.uid,
           email: user.email,
           displayName: user.displayName || "Usuario",
-          role: "joven",
+          role: "diri",
           createdAt: Date.now()
         });
       }

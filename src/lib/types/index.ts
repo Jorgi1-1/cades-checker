@@ -1,4 +1,4 @@
-export type Role = "joven" | "coordinador";
+export type Role = "diri" | "coordi" | "asesor";
 
 export interface UserProfile {
     uid: string;
@@ -12,6 +12,8 @@ export interface SessionEvent {
     id: string; // Document ID
     date: number; // Timestamp
     createdBy: string; // Coordinator ID
+    lateMode?: boolean; // If true, new scans are marked as "late"
+    type: "asamblea" | "junta"; // Type of event
 }
 
 export interface AttendanceRecord {
@@ -20,4 +22,5 @@ export interface AttendanceRecord {
     eventId: string;
     timestamp: number; // When they were scanned
     scannedBy: string; // Coordinator ID who scanned
+    status?: "present" | "late"; // Status of attendance. Undefined = present (legacy)
 }

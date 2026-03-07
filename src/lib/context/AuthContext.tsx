@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         const defaultProfile = {
                             uid: firebaseUser.uid,
                             email: firebaseUser.email || '',
-                            role: 'joven' as const,
+                            role: 'diri' as const,
                             displayName: firebaseUser.displayName || 'Usuario'
                         };
                         setProfile(defaultProfile as UserProfile);
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setProfile({
                         uid: firebaseUser.uid,
                         email: firebaseUser.email || '',
-                        role: 'joven' as const,
+                        role: 'diri' as const,
                         displayName: firebaseUser.displayName || 'Usuario'
                     } as UserProfile);
                 }
