@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Loader2, Check, X, Calendar as CalendarIcon, ShieldAlert, Clock } from "lucide-react";
-import { collection, query, onSnapshot, where, addDoc, deleteDoc, doc, getDoc, orderBy } from "firebase/firestore";
+import { collection, query, onSnapshot, where, addDoc, deleteDoc, doc, getDoc, orderBy, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { useRouter, useParams } from "next/navigation";
 import { UserProfile, SessionEvent, AttendanceRecord } from "@/lib/types";
@@ -71,14 +71,13 @@ export default function GestorManualDiri() {
                 }
             } else if (currentRecord) {
                 // Update existing record
-                await addDoc(collection(db, "attendance"), { // Note: using setDoc or updateDoc would be better but keeping it simple for now, actually let's delete and re-add to avoid schema issues if updateDoc isn't imported
+                await setDoc(doc(db, "attendance", currentRecord.id), {
                     ...currentRecord,
                     status: newStatus
                 });
-                await deleteDoc(doc(db, "attendance", currentRecord.id));
             } else {
                 // Add new record
-                await addDoc(collection(db, "attendance"), {
+                await setDoc(doc(db, "attendance", `${eventId}_${id}`), {
                     userId: id,
                     eventId: eventId,
                     timestamp: Date.now(),
@@ -111,7 +110,8 @@ export default function GestorManualDiri() {
     }
 
     // Only count as "attended" if they are explicitly present (or legacy undefined)
-    const presentCount = attendance.filter(a => a.status !== "late").length;
+    const presentEvents = new Set(attendance.filter(a => a.status !== "late").map(a => a.eventId));
+    const presentCount = presentEvents.size;
     const percentage = events.length === 0 ? 100 : Math.round((presentCount / events.length) * 100);
     const isDanger = events.length > 0 && percentage < 80;
 

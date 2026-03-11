@@ -1,10 +1,10 @@
 "use client";
 
 import { useAuth } from "@/lib/context/AuthContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, CheckCircle, Loader2, XCircle } from "lucide-react";
-import { collection, query, orderBy, limit, onSnapshot, getDocs, addDoc, where, updateDoc, doc } from "firebase/firestore";
+import { collection, query, orderBy, limit, onSnapshot, getDocs, addDoc, where, updateDoc, doc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
 import { Scanner } from '@yudiel/react-qr-scanner';
@@ -17,6 +17,7 @@ export default function ScannerPage() {
 
     const [feedback, setFeedback] = useState<"success" | "duplicate" | "error" | "expired" | null>(null);
     const [processing, setProcessing] = useState(false);
+    const isProcessingRef = useRef(false);
 
     // Get current event directly
     useEffect(() => {
@@ -34,13 +35,14 @@ export default function ScannerPage() {
 
 
     const handleScan = async (result: unknown) => {
-        if (!result || !currentEventId || processing || !user) return;
+        if (!result || !currentEventId || processing || isProcessingRef.current || !user) return;
 
         // The library usually returns an array of results or an object with text
         const scannedText = typeof result === 'string' ? result : (((result as { rawValue?: string }[])?.[0]?.rawValue) || ((result as { text?: string })?.text) || null);
 
         if (!scannedText) return;
 
+        isProcessingRef.current = true;
         setProcessing(true);
 
 
@@ -98,7 +100,7 @@ export default function ScannerPage() {
             }
 
             // 3. Register Attendance
-            await addDoc(collection(db, "attendance"), {
+            await setDoc(doc(db, "attendance", `${currentEventId}_${scannedUserId}`), {
                 userId: scannedUserId,
                 eventId: currentEventId,
                 // eslint-disable-next-line react-hooks/purity
@@ -129,6 +131,7 @@ export default function ScannerPage() {
     const resetScanner = () => {
         setFeedback(null);
         setProcessing(false);
+        isProcessingRef.current = false;
     };
 
     const toggleLateMode = async () => {
