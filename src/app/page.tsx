@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence } from "firebase/auth";
 import { auth, db, googleProvider } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -16,6 +16,7 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
   const router = useRouter();
   const { user: authUser, profile, loading: authLoading } = useAuth();
 
@@ -37,6 +38,8 @@ export default function Home() {
     setError("");
 
     try {
+      // Configurar la persistencia antes de iniciar sesión
+      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
       await signInWithEmailAndPassword(auth, email, password);
       // Wait for AuthContext to detect auth change and useEffect to redirect
     } catch (err: unknown) {
@@ -99,6 +102,8 @@ export default function Home() {
     // IMPORTANTE PARA MÓVILES: Ejecutar el PopUp ANTES de cualquier setState o await
     // para evitar que Safari/Chrome móvil bloqueen la ventana emergente al no detectar la acción directa.
     try {
+      // Configurar la persistencia antes de iniciar sesión
+      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
       const userCredential = await signInWithPopup(auth, googleProvider);
 
       setLoading(true);
@@ -224,6 +229,29 @@ export default function Home() {
                   placeholder="••••••••"
                 />
               </div>
+
+              {isLogin && (
+                <div className="flex items-center justify-between mt-2">
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-5 h-5 border rounded transition-all flex items-center justify-center ${rememberMe ? 'bg-brand-rojo border-brand-rojo' : 'border-stone-700 bg-[#111] group-hover:border-stone-500'}`}>
+                        {rememberMe && (
+                          <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-sm text-stone-400 group-hover:text-stone-300 transition-colors">Permanecer conectado</span>
+                  </label>
+                </div>
+              )}
 
               {error && (
                 <motion.div
