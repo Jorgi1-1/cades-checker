@@ -24,6 +24,11 @@ export default function CoordiDashboard() {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    
+    // Extra Event State
+    const [showExtraModal, setShowExtraModal] = useState(false);
+    const [extraName, setExtraName] = useState("");
+    const [extraDate, setExtraDate] = useState("");
 
     // Initialize data subscriptions
     useEffect(() => {
@@ -148,6 +153,30 @@ export default function CoordiDashboard() {
         }
     };
 
+    const handleCreateExtra = async () => {
+        if (!extraName.trim() || !extraDate || !user) return;
+        setCreating(true);
+        try {
+            const [year, month, day] = extraDate.split('-').map(Number);
+            const dateObj = new Date(year, month - 1, day, 12, 0, 0); // Noon to avoid timezone shifts
+
+            await addDoc(collection(db, "events"), {
+                date: dateObj.getTime(),
+                createdBy: user.uid,
+                lateMode: false,
+                type: "extraordinario",
+                customName: extraName.trim()
+            });
+            setShowExtraModal(false);
+            setExtraName("");
+            setExtraDate("");
+            setTimeout(() => setCreating(false), 800);
+        } catch (e) {
+            console.error("Error creating extra session", e);
+            setCreating(false);
+        }
+    };
+
     const isToday = (ms: number) => {
         const d = new Date(ms);
         const today = new Date();
@@ -222,6 +251,17 @@ export default function CoordiDashboard() {
                                     className="flex-1 bg-brand-rojo hover:bg-[#b03a31] text-brand-blanco font-semibold rounded-xl px-2 py-3 flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 text-sm"
                                 >
                                     {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4" /> Junta</>}
+                                </button>
+                                <button
+                                    disabled={creating}
+                                    onClick={() => {
+                                        setExtraDate(new Date().toISOString().split('T')[0]);
+                                        setShowExtraModal(true);
+                                    }}
+                                    className="w-12 bg-stone-800 hover:bg-stone-700 text-brand-blanco font-semibold rounded-xl flex items-center justify-center transition-all active:scale-95 disabled:opacity-50 border border-stone-700"
+                                    title="Evento Extraordinario"
+                                >
+                                    <Plus className="w-5 h-5 text-stone-400" />
                                 </button>
                             </div>
                         )}
@@ -471,6 +511,64 @@ export default function CoordiDashboard() {
                 </div>
             )}
 
+            {/* Create Extra Event Modal */}
+            {showExtraModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-[#111] border border-stone-800 rounded-3xl p-8 max-w-md w-full relative"
+                    >
+                        <button 
+                            onClick={() => setShowExtraModal(false)}
+                            className="absolute top-4 right-4 p-2 text-stone-500 hover:text-white transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        
+                        <h2 className="text-xl font-bold text-white mb-2">Evento Extraordinario</h2>
+                        <p className="text-stone-400 text-sm mb-6">Genera un evento manual asignándole un nombre y fecha (ej. Viacrucis, Campamento).</p>
+
+                        <div className="space-y-4 mb-8">
+                            <div>
+                                <label className="text-sm text-stone-400 block mb-1">Nombre del evento</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="Ej. Viacrucis"
+                                    value={extraName}
+                                    onChange={(e) => setExtraName(e.target.value)}
+                                    className="w-full bg-[#222] border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-naranja focus:ring-1 focus:ring-brand-naranja transition-colors"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-stone-400 block mb-1">Fecha</label>
+                                <input 
+                                    type="date" 
+                                    value={extraDate}
+                                    onChange={(e) => setExtraDate(e.target.value)}
+                                    className="w-full bg-[#222] border border-stone-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-naranja focus:ring-1 focus:ring-brand-naranja transition-colors [color-scheme:dark]"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={() => setShowExtraModal(false)}
+                                className="flex-1 px-4 py-3 rounded-xl font-bold text-stone-300 bg-stone-800 hover:bg-stone-700 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                disabled={!extraName.trim() || !extraDate || creating}
+                                onClick={handleCreateExtra}
+                                className="flex-1 px-4 py-3 rounded-xl font-bold text-black bg-brand-naranja hover:bg-[#e08922] disabled:opacity-50 disabled:bg-[#443316] transition-colors flex justify-center items-center gap-2"
+                            >
+                                {creating ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Añadir'}
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 }

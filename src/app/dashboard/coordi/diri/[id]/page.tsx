@@ -184,7 +184,7 @@ export default function GestorManualDiri() {
                             >
                                 <div>
                                     <p className="text-brand-blanco font-medium capitalize">
-                                        {event.type || 'asamblea'} de {eventDate.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                        {event.type === 'extraordinario' && event.customName ? event.customName : (event.type || 'asamblea')} de {eventDate.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                                     </p>
                                     <p className="text-brand-gris text-sm mt-1">
                                         ID: <span className="font-mono text-xs">{event.id.slice(0, 8)}</span>

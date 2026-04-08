@@ -13,7 +13,8 @@ export interface SessionEvent {
     date: number; // Timestamp
     createdBy: string; // Coordinator ID
     lateMode?: boolean; // If true, new scans are marked as "late"
-    type: "asamblea" | "junta"; // Type of event
+    type: "asamblea" | "junta" | "extraordinario"; // Type of event
+    customName?: string; // Optional custom name for extraordinary events
 }
 
 export interface AttendanceRecord {

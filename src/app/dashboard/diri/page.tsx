@@ -208,7 +208,7 @@ export default function DiriDashboard() {
                                     <div key={event.id} className="flex justify-between items-center p-3 rounded-2xl bg-stone-900 border border-stone-800">
                                         <div>
                                             <p className="text-sm font-medium text-brand-blanco capitalize">
-                                                {event.type || 'asamblea'} del {dateObj.toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })}
+                                                {event.type === 'extraordinario' && (event as any).customName ? (event as any).customName : (event.type || 'asamblea')} del {dateObj.toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })}
                                             </p>
                                         </div>
                                         <div>
