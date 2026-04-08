@@ -3,7 +3,7 @@
 import { useAuth } from "@/lib/context/AuthContext";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Check, X, Calendar as CalendarIcon, ShieldAlert, Clock } from "lucide-react";
+import { ArrowLeft, Loader2, Check, X, Calendar as CalendarIcon, ShieldAlert, Clock, FileText } from "lucide-react";
 import { collection, query, onSnapshot, where, addDoc, deleteDoc, doc, getDoc, orderBy, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { useRouter, useParams } from "next/navigation";
@@ -61,7 +61,7 @@ export default function GestorManualDiri() {
         };
     }, [id]);
 
-    const handleStatusChange = async (eventId: string, currentRecord: AttendanceRecord | undefined, newStatus: "present" | "late" | null) => {
+    const handleStatusChange = async (eventId: string, currentRecord: AttendanceRecord | undefined, newStatus: "present" | "late" | "excused" | null) => {
         setToggling(eventId);
         try {
             if (newStatus === null) {
@@ -109,11 +109,12 @@ export default function GestorManualDiri() {
         );
     }
 
-    // Only count as "attended" if they are explicitly present (or legacy undefined)
-    const presentEvents = new Set(attendance.filter(a => a.status !== "late").map(a => a.eventId));
-    const presentCount = presentEvents.size;
-    const percentage = events.length === 0 ? 100 : Math.round((presentCount / events.length) * 100);
-    const isDanger = events.length > 0 && percentage < 80;
+    // Calculate attendance ignoring excused sessions
+    const presentCount = attendance.filter(a => a.status === "present" || !a.status).length;
+    const excusedCount = attendance.filter(a => a.status === "excused").length;
+    const effectiveTotal = events.length - excusedCount;
+    const percentage = effectiveTotal <= 0 ? 100 : Math.round((presentCount / effectiveTotal) * 100);
+    const isDanger = effectiveTotal > 0 && percentage < 80;
 
     return (
         <div className="min-h-screen bg-brand-negro text-brand-blanco p-6 relative overflow-hidden pb-32">
@@ -171,7 +172,7 @@ export default function GestorManualDiri() {
                         const isToggling = toggling === event.id;
                         const eventDate = new Date(event.date);
 
-                        const currentStatus = record ? (record.status === "late" ? "late" : "present") : "absent";
+                        const currentStatus = record ? (record.status === "late" ? "late" : record.status === "excused" ? "excused" : "present") : "absent";
 
                         return (
                             <motion.div
@@ -190,8 +191,8 @@ export default function GestorManualDiri() {
                                     </p>
                                 </div>
 
-                                {/* Manual Action Buttons (Only for Coordi) */}
-                                {profile.role === "coordi" && (
+                                {/* Manual Action Buttons (For Coordi & Asesor) */}
+                                {(profile.role === "coordi" || profile.role === "asesor") && (
                                     <div className="flex gap-2">
                                         {isToggling ? (
                                             <div className="h-10 w-32 flex items-center justify-center border border-[#222] rounded-xl bg-[#111]">
@@ -209,6 +210,18 @@ export default function GestorManualDiri() {
                                                     title="Marcar Falta"
                                                 >
                                                     <X className="w-5 h-5" />
+                                                </button>
+
+                                                {/* Justify Button */}
+                                                <button
+                                                    onClick={() => handleStatusChange(event.id, record, "excused")}
+                                                    className={`p-2 rounded-xl border transition-all active:scale-95 flex items-center gap-1 ${currentStatus === "excused"
+                                                        ? "bg-stone-800 text-stone-300 border-stone-600"
+                                                        : "bg-transparent text-[#555] border-[#222] hover:text-stone-300 hover:border-stone-600 hover:bg-stone-800/50"
+                                                        }`}
+                                                    title="Falta Justificada"
+                                                >
+                                                    <span className="text-xs font-bold px-1.5">J</span>
                                                 </button>
 
                                                 {/* Late Button */}

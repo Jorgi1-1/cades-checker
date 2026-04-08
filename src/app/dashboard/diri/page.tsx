@@ -14,7 +14,7 @@ export default function DiriDashboard() {
     const { user, profile, loading: authLoading } = useAuth();
     const [events, setEvents] = useState<{ id: string; date: string | number; type?: string }[]>([]);
     const [latestEventId, setLatestEventId] = useState<string | null>(null);
-    const [attendanceDict, setAttendanceDict] = useState<Record<string, { attended: boolean, late: boolean }>>({});
+    const [attendanceDict, setAttendanceDict] = useState<Record<string, { attended: boolean, late: boolean, excused: boolean }>>({});
     const [totalEvents, setTotalEvents] = useState(0);
     const [attendedEvents, setAttendedEvents] = useState(0);
     const router = useRouter();
@@ -41,17 +41,22 @@ export default function DiriDashboard() {
         const qAttended = query(collection(db, "attendance"), where("userId", "==", user.uid));
         const unsubAttended = onSnapshot(qAttended, (snap) => {
             let presentCount = 0;
-            const dict: Record<string, { attended: boolean, late: boolean }> = {};
+            let excusedCount = 0;
+            const dict: Record<string, { attended: boolean, late: boolean, excused: boolean }> = {};
 
             snap.docs.forEach(d => {
                 const data = d.data();
                 const isLate = data.status === "late";
-                dict[data.eventId] = { attended: true, late: isLate };
+                const isExcused = data.status === "excused";
+                dict[data.eventId] = { attended: !isExcused && !isLate, late: isLate, excused: isExcused };
 
-                if (!isLate) presentCount++;
+                if (data.status === "present" || !data.status) presentCount++;
+                if (isExcused) excusedCount++;
             });
 
-            setAttendedEvents(presentCount); // The numerator (only presents count for percentage)
+            const effectiveTotal = totalEvents - excusedCount;
+            setTotalEvents(effectiveTotal); // Overriding totalEvents inside this component to effectiveTotal
+            setAttendedEvents(presentCount);
             setAttendanceDict(dict);
         });
 
@@ -197,6 +202,7 @@ export default function DiriDashboard() {
                                 const record = attendanceDict[event.id];
                                 const hasAttended = !!record?.attended;
                                 const isLate = !!record?.late;
+                                const isExcused = !!record?.excused;
                                 const dateObj = new Date(event.date);
                                 return (
                                     <div key={event.id} className="flex justify-between items-center p-3 rounded-2xl bg-stone-900 border border-stone-800">
@@ -206,13 +212,16 @@ export default function DiriDashboard() {
                                             </p>
                                         </div>
                                         <div>
-                                            {hasAttended ? (
-                                                isLate ? (
-                                                    <span className="text-brand-naranja text-xs font-bold px-2 py-1 bg-brand-naranja/10 border border-brand-naranja/20 rounded-lg">RETARDO</span>
-                                                ) : (
-                                                    <span className="text-brand-cafe text-xs font-bold px-2 py-1 bg-brand-cafe/10 border border-brand-cafe/20 rounded-lg">ASISTIÓ</span>
-                                                )
-                                            ) : (
+                                            {hasAttended && !isExcused && !isLate && (
+                                                <span className="text-brand-cafe text-xs font-bold px-2 py-1 bg-brand-cafe/10 border border-brand-cafe/20 rounded-lg">ASISTIÓ</span>
+                                            )}
+                                            {isLate && (
+                                                <span className="text-brand-naranja text-xs font-bold px-2 py-1 bg-brand-naranja/10 border border-brand-naranja/20 rounded-lg">RETARDO</span>
+                                            )}
+                                            {isExcused && (
+                                                <span className="text-stone-400 text-xs font-bold px-2 py-1 bg-stone-800 border border-stone-700 rounded-lg">(JUSTIFICADA)</span>
+                                            )}
+                                            {!hasAttended && !isLate && !isExcused && (
                                                 <span className="text-brand-rojo text-xs font-bold px-2 py-1 bg-brand-rojo/10 border border-brand-rojo/20 rounded-lg">FALTA</span>
                                             )}
                                         </div>

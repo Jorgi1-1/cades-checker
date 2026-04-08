@@ -22,5 +22,6 @@ export interface AttendanceRecord {
     eventId: string;
     timestamp: number; // When they were scanned
     scannedBy: string; // Coordinator ID who scanned
-    status?: "present" | "late"; // Status of attendance. Undefined = present (legacy)
+    status?: "present" | "late" | "excused"; // Status of attendance. Undefined = present (legacy)
 }
+

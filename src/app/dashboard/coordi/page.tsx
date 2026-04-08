@@ -3,12 +3,13 @@
 import { useAuth } from "@/lib/context/AuthContext";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Plus, CalendarPlus, QrCode, LogOut, CheckCircle2 } from "lucide-react";
-import { collection, query, onSnapshot, addDoc, doc, updateDoc } from "firebase/firestore";
+import { Loader2, Plus, CalendarPlus, QrCode, LogOut, CheckCircle2, Trash2, X, AlertTriangle } from "lucide-react";
+import { collection, query, onSnapshot, addDoc, doc, updateDoc, deleteDoc, getDocs, where, writeBatch } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import Link from "next/link";
+import QRCode from "react-qr-code";
 import { UserProfile, SessionEvent, AttendanceRecord } from "@/lib/types";
 
 export default function CoordiDashboard() {
@@ -19,6 +20,10 @@ export default function CoordiDashboard() {
     const [totalEvents, setTotalEvents] = useState(0);
     const router = useRouter();
     const [creating, setCreating] = useState(false);
+    const [showMyQR, setShowMyQR] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     // Initialize data subscriptions
     useEffect(() => {
@@ -29,7 +34,6 @@ export default function CoordiDashboard() {
         const unsubUsers = onSnapshot(qUsers, async (usersSnap) => {
             const usersData = usersSnap.docs.map(doc => doc.data() as UserProfile);
             setAllUsers(usersData);
-            const dirisList = usersData.filter(u => u.role === "diri");
 
             // Listen to total events
             const eventsRef = collection(db, "events");
@@ -44,15 +48,17 @@ export default function CoordiDashboard() {
             const unsubAtt = onSnapshot(attRef, (attSnap) => {
                 const attendances = attSnap.docs.map(d => d.data() as AttendanceRecord);
 
-                const enriched = dirisList.map(j => {
+                const enriched = usersData.map(j => {
                     const userAtts = attendances.filter(a => a.userId === j.uid);
                     // Only count as "attended" if they are explicitly present (or legacy undefined)
-                    const presentCount = userAtts.filter(a => a.status !== "late").length;
+                    const presentCount = userAtts.filter(a => a.status === "present" || !a.status).length;
+                    const excusedCount = userAtts.filter(a => a.status === "excused").length;
+                    const effectiveTotal = totalEvents - excusedCount;
 
                     return {
                         ...j,
                         attendedEvents: presentCount,
-                        attendancePercentage: totalEvents === 0 ? 100 : Math.round((presentCount / totalEvents) * 100)
+                        attendancePercentage: effectiveTotal <= 0 ? 100 : Math.round((presentCount / effectiveTotal) * 100)
                     };
                 });
 
@@ -115,6 +121,33 @@ export default function CoordiDashboard() {
         }
     };
 
+    const handleDeleteEvent = async () => {
+        if (!currentEvent) return;
+        setDeleting(true);
+        try {
+            // Delete the event doc
+            await deleteDoc(doc(db, "events", currentEvent.id));
+            
+            // Query all attendance docs linked to this event
+            const qAtt = query(collection(db, "attendance"), where("eventId", "==", currentEvent.id));
+            const attDocs = await getDocs(qAtt);
+            
+            // Use batch to delete them safely
+            const batch = writeBatch(db);
+            attDocs.forEach(d => {
+                batch.delete(d.ref);
+            });
+            await batch.commit();
+
+            setShowDeleteModal(false);
+            setDeleteConfirm(false);
+        } catch (e) {
+            console.error("Error deleting session and attendance:", e);
+        } finally {
+            setDeleting(false);
+        }
+    };
+
     const isToday = (ms: number) => {
         const d = new Date(ms);
         const today = new Date();
@@ -161,9 +194,18 @@ export default function CoordiDashboard() {
                         </div>
 
                         {hasEventToday ? (
-                            <div className="w-full bg-[#222] text-brand-naranja font-semibold rounded-xl px-4 py-3 flex items-center justify-center gap-2 border border-brand-naranja/20">
-                                <CheckCircle2 className="w-5 h-5" />
-                                {currentEvent.type === 'asamblea' ? 'Asamblea Activa' : 'Junta Activa'} ({new Date(currentEvent.date).toLocaleDateString('es-ES')})
+                            <div className="w-full bg-[#222] text-brand-naranja font-semibold rounded-xl px-4 py-3 flex items-center justify-between gap-2 border border-brand-naranja/20">
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="w-5 h-5" />
+                                    <span className="truncate">{currentEvent.type === 'asamblea' ? 'Asamblea' : 'Junta'} ({new Date(currentEvent.date).toLocaleDateString('es-ES')})</span>
+                                </div>
+                                <button 
+                                    onClick={() => setShowDeleteModal(true)} 
+                                    className="p-1.5 hover:bg-brand-rojo/10 rounded-lg text-brand-rojo transition-colors flex-shrink-0"
+                                    title="Borrar sesión del día"
+                                >
+                                    <Trash2 className="w-5 h-5" />
+                                </button>
                             </div>
                         ) : (
                             <div className="flex gap-3">
@@ -201,15 +243,26 @@ export default function CoordiDashboard() {
                         <p className="text-sm text-brand-gris mb-6">Abre la cámara para comenzar a registrar llegadas.</p>
                     </div>
 
-                    <Link href="/dashboard/coordi/scanner">
-                        <button
-                            disabled={!currentEvent}
-                            className="w-full bg-brand-naranja hover:bg-[#e08922] text-brand-negro font-bold rounded-xl px-4 py-3 flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:bg-[#222] disabled:text-stone-500"
-                        >
-                            <QrCode className="w-5 h-5" />
-                            {currentEvent ? "Abrir Cámara" : "Crea una sesión primero"}
-                        </button>
-                    </Link>
+                    <div className="flex gap-2">
+                        <Link href="/dashboard/coordi/scanner" className="flex-1">
+                            <button
+                                disabled={!currentEvent}
+                                className="w-full bg-brand-naranja hover:bg-[#e08922] text-brand-negro font-bold rounded-xl px-2 py-3 flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:bg-[#222] disabled:text-stone-500 text-sm"
+                            >
+                                <QrCode className="w-5 h-5" />
+                                Escáner
+                            </button>
+                        </Link>
+                        {hasEventToday && (
+                            <button 
+                                onClick={() => setShowMyQR(true)}
+                                className="flex-1 bg-stone-800 hover:bg-stone-700 text-brand-blanco font-bold rounded-xl px-2 py-3 flex items-center justify-center gap-2 transition-all active:scale-95 text-sm border border-stone-700"
+                            >
+                                <QrCode className="w-5 h-5" />
+                                Mi QR
+                            </button>
+                        )}
+                    </div>
                 </motion.div>
             </div>
 
@@ -223,7 +276,7 @@ export default function CoordiDashboard() {
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold flex items-center gap-2 text-brand-blanco">
                         <CheckCircle2 className="w-5 h-5 text-brand-naranja" />
-                        Estado del Grupo ({diris.length} diris)
+                        Estado de Asistencias ({diris.length} registros)
                     </h2>
                 </div>
 
@@ -271,7 +324,7 @@ export default function CoordiDashboard() {
                             {diris.length === 0 && (
                                 <tr>
                                     <td colSpan={3} className="text-center py-8 text-stone-500 bg-stone-800/20 rounded-xl">
-                                        No hay diris registrados aún.
+                                        No hay usuarios registrados aún.
                                     </td>
                                 </tr>
                             )}
@@ -329,6 +382,93 @@ export default function CoordiDashboard() {
                         </table>
                     </div>
                 </motion.div>
+            )}
+
+            {/* My QR Modal */}
+            {showMyQR && currentEvent && user && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-[#111] border border-stone-800 rounded-3xl p-8 max-w-sm w-full relative flex flex-col items-center"
+                    >
+                        <button 
+                            onClick={() => setShowMyQR(false)}
+                            className="absolute top-4 right-4 p-2 text-stone-500 hover:text-white transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        
+                        <h2 className="text-xl font-bold text-white mb-6">Pase de Lista</h2>
+                        <div className="bg-white p-4 rounded-3xl mb-4 shadow-xl shadow-brand-blanco/5">
+                            <QRCode value={JSON.stringify({ u: user.uid, e: currentEvent.id })} size={200} className="w-48 h-48" fgColor="#0c0a09" />
+                        </div>
+                        <p className="text-stone-400 font-mono text-sm tracking-wider opacity-70">ID: {user.uid.slice(0, 8).toUpperCase()}</p>
+                    </motion.div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-[#111] border border-stone-800 rounded-3xl p-8 max-w-sm w-full relative"
+                    >
+                        <button 
+                            onClick={() => {
+                                setShowDeleteModal(false);
+                                setDeleteConfirm(false);
+                            }}
+                            className="absolute top-4 right-4 p-2 text-stone-500 hover:text-white transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        
+                        <div className="flex justify-center mb-4">
+                            <div className="bg-brand-rojo/20 p-4 rounded-full border border-brand-rojo/30">
+                                <AlertTriangle className="w-8 h-8 text-brand-rojo" />
+                            </div>
+                        </div>
+
+                        <h2 className="text-xl font-bold text-white text-center mb-2">¿Borrar sesión?</h2>
+                        <p className="text-stone-400 text-sm text-center mb-6">
+                            Esta acción eliminará permanentemente la sesión actual y todos los pases de asistencia registrados en ella.
+                        </p>
+
+                        <label className="flex items-start gap-3 p-4 rounded-xl bg-[#222] border border-stone-800 cursor-pointer mb-6 group">
+                            <input 
+                                type="checkbox" 
+                                checked={deleteConfirm}
+                                onChange={(e) => setDeleteConfirm(e.target.checked)}
+                                className="mt-1 w-4 h-4 rounded border-stone-700 text-brand-rojo focus:ring-brand-rojo bg-[#111]"
+                            />
+                            <span className="text-sm text-stone-300 select-none group-hover:text-white transition-colors">
+                                Confirmo que deseo borrar esta sesión y todas sus asistencias.
+                            </span>
+                        </label>
+
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={() => {
+                                    setShowDeleteModal(false);
+                                    setDeleteConfirm(false);
+                                }}
+                                className="flex-1 px-4 py-3 rounded-xl font-bold text-stone-300 bg-stone-800 hover:bg-stone-700 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                disabled={!deleteConfirm || deleting}
+                                onClick={handleDeleteEvent}
+                                className="flex-1 px-4 py-3 rounded-xl font-bold text-white bg-brand-rojo hover:bg-[#d63d32] disabled:opacity-50 disabled:bg-[#441916] transition-colors flex justify-center items-center gap-2"
+                            >
+                                {deleting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Borrar Sesión'}
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
             )}
 
         </div>
