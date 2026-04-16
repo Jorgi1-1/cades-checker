@@ -18,6 +18,8 @@ export default function CoordiDashboard() {
     const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
     const [currentEvent, setCurrentEvent] = useState<SessionEvent | null>(null);
     const [totalEvents, setTotalEvents] = useState(0);
+    const [eventsList, setEventsList] = useState<SessionEvent[]>([]);
+    const [attendanceList, setAttendanceList] = useState<AttendanceRecord[]>([]);
     const router = useRouter();
     const [creating, setCreating] = useState(false);
     const [showMyQR, setShowMyQR] = useState(false);
@@ -34,51 +36,52 @@ export default function CoordiDashboard() {
     useEffect(() => {
         if (!user) return;
 
-        // Listen to ALL young users
-        const qUsers = query(collection(db, "users"));
-        const unsubUsers = onSnapshot(qUsers, async (usersSnap) => {
-            const usersData = usersSnap.docs.map(doc => doc.data() as UserProfile);
-            setAllUsers(usersData);
+        const unsubUsers = onSnapshot(query(collection(db, "users")), (snap) => {
+            setAllUsers(snap.docs.map(doc => doc.data() as UserProfile));
+        });
 
-            // Listen to total events
-            const eventsRef = collection(db, "events");
-            const unsubEvents = onSnapshot(eventsRef, (eventsSnap) => {
-                setTotalEvents(eventsSnap.size);
-                const lastEvent = eventsSnap.docs.sort((a, b) => b.data().date - a.data().date)[0];
-                setCurrentEvent(lastEvent ? { id: lastEvent.id, ...lastEvent.data() } as SessionEvent : null);
-            });
+        const unsubEvents = onSnapshot(collection(db, "events"), (snap) => {
+            const evts = snap.docs.map(d => ({ id: d.id, ...d.data() } as SessionEvent));
+            setEventsList(evts);
+            setTotalEvents(evts.length);
+            const lastEvent = [...evts].sort((a, b) => b.date - a.date)[0];
+            setCurrentEvent(lastEvent || null);
+        });
 
-            // Listen to all attendance to calculate percentages
-            const attRef = collection(db, "attendance");
-            const unsubAtt = onSnapshot(attRef, (attSnap) => {
-                const attendances = attSnap.docs.map(d => d.data() as AttendanceRecord);
+        const unsubAtt = onSnapshot(collection(db, "attendance"), (snap) => {
+            setAttendanceList(snap.docs.map(d => d.data() as AttendanceRecord));
+        });
 
-                const enriched = usersData.map(j => {
-                    const userAtts = attendances.filter(a => a.userId === j.uid);
-                    // Only count as "attended" if they are explicitly present (or legacy undefined)
-                    const presentCount = userAtts.filter(a => a.status === "present" || !a.status).length;
-                    const excusedCount = userAtts.filter(a => a.status === "excused").length;
-                    const effectiveTotal = totalEvents - excusedCount;
+        return () => {
+            unsubUsers();
+            unsubEvents();
+            unsubAtt();
+        };
+    }, [user]);
 
-                    return {
-                        ...j,
-                        attendedEvents: presentCount,
-                        attendancePercentage: effectiveTotal <= 0 ? 100 : Math.round((presentCount / effectiveTotal) * 100)
-                    };
-                });
+    // Compute derived state for percentages
+    useEffect(() => {
+        if (!allUsers.length) return;
 
-                // Filter and sort the table to show lowest percentage first
-                setDiris(enriched.sort((a, b) => a.attendancePercentage - b.attendancePercentage));
-            });
+        const validEventIds = new Set(eventsList.map(e => e.id));
 
-            return () => {
-                unsubEvents();
-                unsubAtt();
+        const enriched = allUsers.map(j => {
+            const userAtts = attendanceList.filter(a => a.userId === j.uid && validEventIds.has(a.eventId));
+            // Only count as "attended" if they are explicitly present (or legacy undefined)
+            const presentCount = userAtts.filter(a => a.status === "present" || !a.status).length;
+            const excusedCount = userAtts.filter(a => a.status === "excused").length;
+            const effectiveTotal = eventsList.length - excusedCount;
+
+            return {
+                ...j,
+                attendedEvents: presentCount,
+                attendancePercentage: effectiveTotal <= 0 ? 100 : Math.round((presentCount / effectiveTotal) * 100)
             };
         });
 
-        return () => unsubUsers();
-    }, [user, totalEvents]);
+        // Filter and sort the table to show lowest percentage first
+        setDiris(enriched.sort((a, b) => a.attendancePercentage - b.attendancePercentage));
+    }, [allUsers, eventsList, attendanceList]);
 
     useEffect(() => {
         if (!authLoading && (!user || (profile?.role !== "coordi" && profile?.role !== "asesor"))) {

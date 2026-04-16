@@ -14,9 +14,7 @@ export default function DiriDashboard() {
     const { user, profile, loading: authLoading } = useAuth();
     const [events, setEvents] = useState<{ id: string; date: string | number; type?: string }[]>([]);
     const [latestEventId, setLatestEventId] = useState<string | null>(null);
-    const [attendanceDict, setAttendanceDict] = useState<Record<string, { attended: boolean, late: boolean, excused: boolean }>>({});
-    const [totalEvents, setTotalEvents] = useState(0);
-    const [attendedEvents, setAttendedEvents] = useState(0);
+    const [attendances, setAttendances] = useState<any[]>([]);
     const router = useRouter();
 
     // Loading events calculations
@@ -28,7 +26,6 @@ export default function DiriDashboard() {
         const unsubEvents = onSnapshot(qEvents, (snap) => {
             const evts = snap.docs.map(d => ({ id: d.id, ...(d.data() as { date: string | number; type?: string }) }));
             setEvents(evts);
-            setTotalEvents(snap.size); // The denominator
 
             if (!snap.empty) {
                 setLatestEventId(snap.docs[0].id);
@@ -40,24 +37,7 @@ export default function DiriDashboard() {
         // Listen to attended events
         const qAttended = query(collection(db, "attendance"), where("userId", "==", user.uid));
         const unsubAttended = onSnapshot(qAttended, (snap) => {
-            let presentCount = 0;
-            let excusedCount = 0;
-            const dict: Record<string, { attended: boolean, late: boolean, excused: boolean }> = {};
-
-            snap.docs.forEach(d => {
-                const data = d.data();
-                const isLate = data.status === "late";
-                const isExcused = data.status === "excused";
-                dict[data.eventId] = { attended: !isExcused && !isLate, late: isLate, excused: isExcused };
-
-                if (data.status === "present" || !data.status) presentCount++;
-                if (isExcused) excusedCount++;
-            });
-
-            const effectiveTotal = totalEvents - excusedCount;
-            setTotalEvents(effectiveTotal); // Overriding totalEvents inside this component to effectiveTotal
-            setAttendedEvents(presentCount);
-            setAttendanceDict(dict);
+            setAttendances(snap.docs.map(d => d.data()));
         });
 
         return () => {
@@ -65,6 +45,26 @@ export default function DiriDashboard() {
             unsubAttended();
         };
     }, [user]);
+
+    // Compute derived state
+    const validEventIds = new Set(events.map(e => e.id));
+    const validAttendances = attendances.filter(a => validEventIds.has(a.eventId));
+    
+    let attendedEvents = 0;
+    let excusedCount = 0;
+    const attendanceDict: Record<string, { attended: boolean, late: boolean, excused: boolean }> = {};
+
+    validAttendances.forEach(data => {
+        const isLate = data.status === "late";
+        const isExcused = data.status === "excused";
+        attendanceDict[data.eventId] = { attended: !isExcused && !isLate, late: isLate, excused: isExcused };
+
+        if (data.status === "present" || !data.status) attendedEvents++;
+        if (isExcused) excusedCount++;
+    });
+
+    const totalEventsBase = events.length;
+    const effectiveTotal = Math.max(0, totalEventsBase - excusedCount);
 
     useEffect(() => {
         if (!authLoading && (!user || profile?.role !== "diri")) {
@@ -80,8 +80,8 @@ export default function DiriDashboard() {
         );
     }
 
-    const percentage = totalEvents === 0 ? 100 : Math.round((attendedEvents / totalEvents) * 100);
-    const isDanger = percentage < 80 && totalEvents > 0;
+    const percentage = effectiveTotal <= 0 ? 100 : Math.round((attendedEvents / effectiveTotal) * 100);
+    const isDanger = percentage < 80 && effectiveTotal > 0;
 
     const handleLogout = async () => {
         await signOut(auth);
@@ -172,7 +172,7 @@ export default function DiriDashboard() {
                     </div>
 
                     <div className="pt-2 border-t border-stone-800/50 flex flex-col gap-2 text-sm">
-                        <span className="text-brand-gris">Has llegado a tiempo a {attendedEvents} de {totalEvents} asambleas y juntas.</span>
+                        <span className="text-brand-gris">Has llegado a tiempo a {attendedEvents} de {effectiveTotal} asambleas y juntas.</span>
                         {isDanger ? (
                             <span className="text-brand-rojo font-medium px-2 py-1 bg-brand-rojo/10 border border-brand-rojo/20 rounded-md text-xs self-start">No tienes derecho de asistir a eventos por el momento</span>
                         ) : (

@@ -110,9 +110,12 @@ export default function GestorManualDiri() {
     }
 
     // Calculate attendance ignoring excused sessions
-    const presentCount = attendance.filter(a => a.status === "present" || !a.status).length;
-    const excusedCount = attendance.filter(a => a.status === "excused").length;
-    const effectiveTotal = events.length - excusedCount;
+    const validEventIds = new Set(events.map(e => e.id));
+    const validAttendances = attendance.filter(a => validEventIds.has(a.eventId));
+    
+    const presentCount = validAttendances.filter(a => a.status === "present" || !a.status).length;
+    const excusedCount = validAttendances.filter(a => a.status === "excused").length;
+    const effectiveTotal = Math.max(0, events.length - excusedCount);
     const percentage = effectiveTotal <= 0 ? 100 : Math.round((presentCount / effectiveTotal) * 100);
     const isDanger = effectiveTotal > 0 && percentage < 80;
 
