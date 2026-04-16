@@ -62,6 +62,11 @@ export default function GestorManualDiri() {
     }, [id]);
 
     const handleStatusChange = async (eventId: string, currentRecord: AttendanceRecord | undefined, newStatus: "present" | "late" | "excused" | null) => {
+        if (profile?.role === "asesor" && currentRecord) {
+            // Asesores cannot modify already taken records
+            return;
+        }
+
         setToggling(eventId);
         try {
             if (newStatus === null) {
@@ -196,7 +201,7 @@ export default function GestorManualDiri() {
 
                                 {/* Manual Action Buttons (For Coordi & Asesor) */}
                                 {(profile.role === "coordi" || profile.role === "asesor") && (
-                                    <div className="flex gap-2">
+                                    <div className={`flex gap-2 ${profile.role === "asesor" && record ? "pointer-events-none opacity-80" : ""}`}>
                                         {isToggling ? (
                                             <div className="h-10 w-32 flex items-center justify-center border border-[#222] rounded-xl bg-[#111]">
                                                 <Loader2 className="w-5 h-5 animate-spin text-brand-gris" />
